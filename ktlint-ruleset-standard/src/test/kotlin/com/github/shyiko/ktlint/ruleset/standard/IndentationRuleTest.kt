@@ -508,4 +508,34 @@ class IndentationRuleTest {
                 "continuation_indent_size" to "6")
         )).isEmpty()
     }
+
+    @Test
+    fun testParameterShouldHaveContinuationIndent() {
+        assertThat(IndentationRule().lint(
+            """
+            fun funA(
+                  url: String = ""
+            ) = ClassA(
+                  url = url)
+            """.trimIndent(),
+            mapOf("indent_size" to "4",
+                "continuation_indent_size" to "6")
+        )).isEmpty()
+    }
+
+    @Test
+    fun testExpectErrorWenParameterIsNotUsingContinuationIndent() {
+        assertThat(IndentationRule().lint(
+            """
+            fun testA(
+                 val paramA: String){
+            }
+            """.trimIndent(),
+            mapOf("indent_size" to "4",
+                "continuation_indent_size" to "6")
+        )).isEqualTo(
+            listOf(
+                LintError(2, 1, "indent", "Unexpected indentation (5) (it should be 6)"))
+        )
+    }
 }

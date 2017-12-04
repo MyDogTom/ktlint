@@ -121,6 +121,7 @@ class IndentationRule : Rule("indent") {
                 || node.nextSibling is KtSuperTypeListEntry
                 || node.nextSibling is KtTypeProjection
                 || parentNode is KtValueArgumentList
+                || parentNode is KtParameterList
                 || parentNode is KtBinaryExpression
                 || parentNode is KtDotQualifiedExpression
                 || parentNode is KtSafeQualifiedExpression
