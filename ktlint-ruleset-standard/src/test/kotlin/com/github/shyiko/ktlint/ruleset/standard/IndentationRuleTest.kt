@@ -34,6 +34,7 @@ class IndentationRuleTest {
             }
             """.trimIndent()
         )).isEqualTo(listOf(
+            LintError(6, 1, "indent", "Unexpected indentation (8) (it should be 4)"),
             LintError(12, 1, "indent", "Unexpected indentation (3) (it should be 4)"),
             LintError(13, 1, "indent", "Unexpected indentation (5) (it should be 4)")
         ))
@@ -515,18 +516,22 @@ class IndentationRuleTest {
     fun testFormatWithRegularIndent() {
         assertThat(IndentationRule().format(
             """
-            fun funA(argA: String) {
-              return argA
-            }
+                class A {
+                    fun funA(argA: String) {
+                      return argA
+                    }
+                }
             """.trimIndent(),
             mapOf("indent_size" to "4",
                 "continuation_indent_size" to "6")
         ))
             .isEqualTo(
                 """
-            fun funA(argA: String) {
-                return argA
-            }
+                class A {
+                    fun funA(argA: String) {
+                        return argA
+                    }
+                }
             """.trimIndent()
             )
     }
@@ -565,6 +570,31 @@ class IndentationRuleTest {
             fun funA(a: A,
                      b: B) {
                 return ""
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun shouldRespectPreviousIntent() {
+        assertThat(IndentationRule().format(
+            """
+            fun setUp() {
+                 helper = XingWebActivityNavigator(
+                    mockPrefs,
+                    LocalPathGenerator(targetContext)
+             )
+            }
+            """.trimIndent(),
+            mapOf("indent_size" to "4",
+                "continuation_indent_size" to "6")
+        )).isEqualTo(
+            """
+            fun setUp() {
+                helper = XingWebActivityNavigator(
+                      mockPrefs,
+                      LocalPathGenerator(targetContext)
+                )
             }
             """.trimIndent()
         )

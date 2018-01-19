@@ -52,30 +52,36 @@ class IndentationRule : Rule("indent") {
                 }
                 val firstParameterColumn = lazy { firstParameter.value?.column ?: 0 }
                 val previousIndent = node.calculatePreviousIndent()
-                val expectedIndentSize =
-                    if (indentConfig.continuation == indentConfig.regular || shouldUseContinuationIndent(node)) {
+                val expectedIndentSize = when {
+                    noIndentIsNeeded(node) -> 0
+                    (indentConfig.continuation == indentConfig.regular || shouldUseContinuationIndent(node)) -> {
                         indentConfig.continuation
-                    } else {
-                        indentConfig.regular
                     }
+                    else -> indentConfig.regular
+                }
                 lines.tail().forEach { line ->
                     if (node.isPartOf(KtParameterList::class)
                         && node.nextSibling is KtParameter
-                        && firstParameter.value?.node != node.nextSibling.node) {
+                        && firstParameter.value?.node != node.nextSibling.node
+                    ) {
                         if ((line.length) != firstParameterColumn.value - 1) {
-                            emit(offset,
+                            emit(
+                                offset,
                                 "Unexpected indentation (${line.length}) (" +
                                     "parameters should be vertically aligned)",
-                                true)
+                                true
+                            )
                             if (autoCorrect) replaceWithExpectedIndent(node, firstParameterColumn.value - 1)
                         }
-                    } else if (line.isNotEmpty() && (line.length - previousIndent) % expectedIndentSize != 0) {
+                    } else if (line.isNotEmpty() && (line.length - previousIndent) != expectedIndentSize) {
 
-                        emit(offset,
+                        emit(
+                            offset,
                             "Unexpected indentation (${line.length - previousIndent}) " +
                                 "(it should be $expectedIndentSize)",
-                            true)
-                        if (autoCorrect) replaceWithExpectedIndent(node, expectedIndentSize)
+                            true
+                        )
+                        if (autoCorrect) replaceWithExpectedIndent(node, previousIndent + expectedIndentSize)
                     }
                     offset += line.length + 1
                 }
@@ -120,5 +126,10 @@ class IndentationRule : Rule("indent") {
                 || parentNode is KtSafeQualifiedExpression
                 || parentNode is KtParenthesizedExpression
             )
+    }
+
+    private fun noIndentIsNeeded(node: PsiWhiteSpace): Boolean {
+        val nextNode = node.nextSibling?.node?.elementType
+        return nextNode == KtTokens.RBRACE || nextNode == KtTokens.RPAR
     }
 }
